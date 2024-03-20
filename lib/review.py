@@ -59,22 +59,44 @@ class Review:
         # save instance in all
         type(self).all[self.id] = self
 
+        # print out
+        print(f"Added Review: {self.summary}")
+
     @classmethod
     def create(cls, year, summary, employee_id):
         """ Initialize a new Review instance and save the object to the database. Return the new instance. """
-        pass
+        review = cls(year, summary, employee_id)
+        review.save()
+        return review
    
     @classmethod
     def instance_from_db(cls, row):
         """Return an Review instance having the attribute values from the table row."""
         # Check the dictionary for  existing instance using the row's primary key
-        pass
-   
+        # we assume row is a result of a retrieved sql query
+        review = cls.all.get(row[0])
+        if review:
+            # in case it was changed
+            review.id = row[0]
+            review.year = row[1]
+            review.summary =row[2]
+            review.employee_id = row[3]
+        else:
+            # it exists in db but not in all within model
+            review = cls(row[1], row[2], row[3])
+            review.id = row[0]
+            cls.all[review.id] = review
+            
+        return review
 
     @classmethod
     def find_by_id(cls, id):
         """Return a Review instance having the attribute values from the table row."""
-        pass
+        sql = """
+            SELECT * FROM reviews WHERE id = ?
+        """
+        result = CURSOR.execute(sql, (id,)).fetchone()
+        return cls.instance_from_db(result)
 
     def update(self):
         """Update the table row corresponding to the current Review instance."""
